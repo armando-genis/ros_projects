@@ -30,6 +30,6 @@ void loop()
   uint8_t_msg.data = sensorValue;
   potentiometer.publish( &uint8_t_msg );
   nh.spinOnce();
-  delay(1000);/simplescreenrecorder.mp4
+  delay(1000);
 
 }
