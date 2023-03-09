@@ -25,7 +25,19 @@ std_msgs::Int16 int32_msg;
 
 void pwm_listenerCallback(const std_msgs::Int16& msg)
 {
+  if (msg.data > 0){
   pwm_data = msg.data;
+  digitalWrite(4,LOW);
+  digitalWrite(5,HIGH);
+  }else if (msg.data < 0){
+  pwm_data = abs(msg.data);
+  digitalWrite(4,HIGH);
+  digitalWrite(5,LOW);
+  }else{
+    rpm =0;
+    pwm_data = 0;
+  }
+  analogWrite(10,pwm_data);
 }
 
 ros::Publisher spin_pub("spin_pub", &float32_msg);
@@ -36,7 +48,7 @@ ros::Subscriber<std_msgs::Int16>pwm_listener("pwm_listener", &pwm_listenerCallba
 
 void setup() {
   // put your setup code here, to run once:
-  pinMode(13, OUTPUT);
+  pinMode(10, OUTPUT);
   pinMode(4, OUTPUT);
   pinMode(5, OUTPUT);
   // encoder pines
@@ -55,19 +67,12 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  // valor = analogRead(A0)/4.01176;
-  // analogWrite(13, valor);
-
-  know_pwm();
-
   float32_msg.data = spin;
   spin_pub.publish( &float32_msg );
-
   float32_msg2.data = estado * rpm;
   rpm_pub.publish( &float32_msg2 );
-
   nh.spinOnce();
+  
   delay(10);  
 }
 
@@ -75,13 +80,13 @@ void doEncodeA()
 {
   valorActual = digitalRead(channelPinA); 
   // Antirebote para saber si este no se mantiene en 1 1 o 0 0, si no son iguales se hace el programa
-  if (valorActual != valorAnterior) {
+  if (valorActual != valorAnterior) { 
  
     // Serial.println("Son distintos");
     if (valorActual == value_channelB)
       {
         // Izquierda
-        estado = 1;
+        estado = -1;
         if(valorActual == 1){
           pulsos++;   
 
@@ -91,12 +96,12 @@ void doEncodeA()
     if (valorActual != value_channelB)
       {
         // Derecha
-        estado = -1;
+        estado = 1;
         if(valorActual == 1){
           pulsos--;
         }
       }
-      spin = pulsos/603.5;
+      spin = pulsos/11.0 * 45.0;
   }  
   else{
     // Serial.println("Son iguales");
@@ -112,27 +117,12 @@ void doEncodeB()
     timeV = micros();
     time_N = (timeV - timeV_past);
     timeV_past = timeV;
-    if(time_N > 4000){
+    if(time_N >= 4000){
       rpm = 0;
     }else{
-      rpm = (60000000.0/((float)time_N * 603.5 ));
+      rpm = (60000000.0/((float)time_N * 11.0 * 45.0 ));
     }
   }
 }
 
-void know_pwm(){
-  if (pwm_data < 0){
-    // true if number is less than 0
-  digitalWrite(4,HIGH);
-  digitalWrite(5,LOW);
-  analogWrite(13, pwm_data * -1);
-  
-  }else if(pwm_data > 0){
-   // true if number is greater than 0
-  digitalWrite(4,LOW);
-  digitalWrite(5,HIGH);
-  analogWrite(13, pwm_data);
-  }else{
-    analogWrite(13, 0);
-  }
-}
+
