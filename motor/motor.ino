@@ -19,7 +19,11 @@ int pwm_data;
 
 ros::NodeHandle nh;
 
-std_msgs::Float32 float32_msg;
+std_msgs::Float32 float32_msg  float32_msg.data = spin;
+  spin_pub.publish( &float32_msg );
+  float32_msg2.data = estado * rpm;
+  rpm_pub.publish( &float32_msg2 );
+  nh.spinOnce();;
 std_msgs::Float32 float32_msg2;
 std_msgs::Int16 int32_msg;
 
@@ -88,7 +92,7 @@ void doEncodeA()
         // Izquierda
         estado = -1;
         if(valorActual == 1){
-          pulsos++;   
+          pulsos--;   
 
         } 
 
@@ -98,10 +102,10 @@ void doEncodeA()
         // Derecha
         estado = 1;
         if(valorActual == 1){
-          pulsos--;
+          pulsos++;
         }
       }
-      spin = pulsos/11.0 * 45.0;
+      spin = pulsos/(11.0 * 45.0);
   }  
   else{
     // Serial.println("Son iguales");
